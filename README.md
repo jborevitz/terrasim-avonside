@@ -77,17 +77,54 @@ serving the farm, pulled from NCI over OPeNDAP by `scripts/pull_barra_hourly.py`
 Precipitation is published only at 1-hourly; the 20-minute product carries wind variables,
 not rain.
 
-Two things the record settles:
+![SILO against BARRA-C2, day by day and year by year](docs/avonside_silo_vs_barra_daily.png)
+
+**Aligning the two is worth more than it looks.** SILO's day is the 24 hours ending at
+9am, so the matching BARRA window starts at 23:00 UTC (09:00 AEST) and carries a two-day
+label shift. Get that right and daily correlation is **r = 0.73**; align naively to UTC
+midnight and it collapses to **r = 0.22**. The wet bias is also not a constant factor —
+the annual ratio runs from 1.14 to 2.29 across the twenty years, so the ×0.577 correction
+is an average, not a per-year fix. Of the 7,870 mm of 20-year excess, 34% falls on days
+SILO calls dry (BARRA has 1,933 wet days against SILO's 1,518) and 67% is extra rain on
+days both agree are wet.
+
+Two further things the record settles:
 
 - **BARRA-C2 is 73% wetter than SILO here** — 930.5 mm/yr against 536.9 at the farm point.
   Every calendar month is biased the same way and monthly r = 0.86, so the timing is
   usable and the magnitude is not. The correction factor to SILO's total is ×0.577.
   Do not substitute BARRA for SILO without applying it.
-- **Rainfall intensity barely reaches the soil's infiltration capacity.** 8.7% of hours
-  are wet at all, the median wet hour is 0.52 mm/h, and 98% of all rain falls at under
-  10 mm/h. Exactly two hours in twenty years reach the 47 mm/h Ksat, and after the SILO
-  bias correction none do. Infiltration-excess runoff is not the mechanism at this site;
-  saturation from below is.
+- **Rainfall intensity barely reaches the infiltration capacity of a wettable soil.**
+  8.7% of hours are wet at all, the median wet hour is 0.52 mm/h, and 98% of all rain
+  falls at under 10 mm/h. Exactly two hours in twenty years reach the 47 mm/h Ksat, and
+  after the SILO bias correction none do.
+
+  **That conclusion is conditional, and the condition is not measured.** Ksat here is
+  computed from texture and bulk density, so it is the conductivity of a *wettable* soil.
+  Eucalypt litter is a well-known cause of soil water repellency, which can cut effective
+  infiltration by an order of magnitude irrespective of pore space. At an effective
+  10 mm/h the record already holds 134 hours over 20 years; at 5 mm/h, 616. So
+  infiltration-excess runoff cannot be ruled out under the forest and woodland litter,
+  particularly after a dry spell, and the question is a field measurement — water-drop
+  penetration time or a mini-disk infiltrometer under litter against adjacent grass —
+  not something a reanalysis can settle.
+
+## Vegetation
+
+![Tree mask at 3 m, canopy >= 5 m](docs/avonside_tree_mask_3m.png)
+
+`data/vegetation/` carries fractional tree cover on the model grid, so `tree_root_depth`
+can separate grass from trees. Trees cover **58.2% of the 46.8 ha title** and 55.3% of the
+113 ha model domain at a 5 m canopy cut — Top farm 33.8%, Upper forest 65.7%, Northerly
+woodland 64.8%, Lower forest flats 69.6%. Dropping the cut to 4 m adds 1.67 ha farm-wide.
+
+The 5 m cut is the one validated against the field-checked crown inventory, and it
+behaves: of 17 inventory trees and 16 low linear objects known not to be trees, a 3 m
+search radius finds all 17 trees and still admits only 5 of the low objects — and two of
+those stood above 5 m in the 2018 lidar and are low now, which is a fallen or died-back
+stem rather than a threshold failure. See `data/vegetation/README.md` for the caveats
+that govern these numbers, especially that the lidar is 2018 and crowns have fallen a
+median 3.3 m since.
 
 ## What is not here
 
