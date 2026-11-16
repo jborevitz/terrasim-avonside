@@ -1,0 +1,6 @@
+The MIT licence in LICENSE covers the code in src/ and scripts/ only.
+
+The contents of data/ are third-party data under their own terms and are NOT
+covered by the MIT licence. data/barra/ holds Bureau of Meteorology BARRA-C2
+reanalysis output, released under Creative Commons Attribution 4.0 International.
+Its attribution and citation requirements are set out in data/barra/README.md.
