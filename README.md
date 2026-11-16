@@ -129,8 +129,21 @@ splits the farm too, leaving 26% of the domain outside the pixel we sampled.
 |---|---|
 | SILO east cell — used for the 20-year forcing | 536.9 |
 | SILO west cell | 607.7 |
-| weighted by where the model domain actually is | **588.2** |
 | BARRA-C2 cell, as published | 930.5 |
+
+**But do not correct the forcing on that basis.** BoM's own gridded analysis, AGCD, sits
+on the *same* 0.05° grid and was pulled from NCI for 2006–2019. The two products agree on
+daily rainfall almost perfectly (r = 0.976) and on a broad west-wet gradient across the
+window — and they disagree completely about where it steepens. Along latitude −36.45,
+AGCD declines smoothly from west to east (573, 545, 539, 528, 521 mm/yr) while SILO is
+**non-monotonic**, stepping *up* to 581 at the farm's western cell against 570 in the cell
+further west, then dropping 60 mm in one cell.
+
+Weighting by where the model domain actually lies therefore gives **+8.4% under SILO but
+only +0.8% under AGCD**. A gradient that one interpolation places exactly on the property
+boundary and the other does not place at all is an artefact of interpolation, not a
+measurement. Treat the farm's rainfall as **540–565 mm/yr with the upper end unsupported**,
+and do not silently adopt the SILO west cell as a correction.
 
 **Gauges, and which ones are real.** Of the stations within 60 km, several nearby records
 are entirely interpolated: Oak Vale (7.7 km) and Jindabyne (10.7 km) are **0% observed**
@@ -147,7 +160,8 @@ genuinely observing, and they are almost all to the east:
 | Cooma (Myalla) | 34.5 E | 1042 m | 94.5% | 608.7 |
 
 The single operating western gauge is **18% wetter than the nearest eastern one**, which
-supports the west-wet gradient with observations rather than interpolation. Across these
+supports a west-wet gradient at the 25 km scale — though Glochinbah is also 95 m higher,
+so elevation and longitude cannot be separated with one western gauge. Across these
 six, rainfall rises about 40 mm/yr per 100 m of elevation, though with n = 6 and elevation
 confounded with longitude the fit is weak (r² = 0.58, p = 0.08) and should not be leaned
 on hard.
