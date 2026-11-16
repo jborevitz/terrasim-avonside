@@ -84,9 +84,11 @@ not rain.
 label shift. Get that right and daily correlation is **r = 0.73**; align naively to UTC
 midnight and it collapses to **r = 0.22**. The wet bias is also not a constant factor —
 the annual ratio runs from 1.14 to 2.29 across the twenty years, so the ×0.577 correction
-is an average, not a per-year fix. Of the 7,870 mm of 20-year excess, 34% falls on days
-SILO calls dry (BARRA has 1,933 wet days against SILO's 1,518) and 67% is extra rain on
-days both agree are wet.
+is an average, not a per-year fix. The 7,870 mm of 20-year excess partitions exactly as:
+**+6,099 mm (78%)** extra rain on the 1,253 days both call wet, **+2,485 mm (32%)** on the
+680 days SILO calls dry but BARRA rains, **+113 mm (1%)** on days both call dry, and
+**−828 mm (−11%)** handed back on the 265 days SILO calls wet but BARRA does not. BARRA
+has 1,933 wet days against SILO's 1,518 — the familiar reanalysis drizzle problem.
 
 Two further things the record settles:
 
