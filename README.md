@@ -111,6 +111,71 @@ Two further things the record settles:
   penetration time or a mini-disk infiltrometer under litter against adjacent grass —
   not something a reanalysis can settle.
 
+## Which rainfall do you believe?
+
+![Three measurement footprints over the four-tile LiDAR block](docs/avonside_rain_pixels.png)
+
+The farm is smaller than two of the three instruments that measure its rainfall, and it
+sits on the seam of both coarse grids.
+
+SILO's Data Drill grid is 0.05°, with cell edges here at lon 148.725/148.775 and lat
+−36.475/−36.425 (measured by scanning the API, not read from documentation). The farm
+centroid lies about **60 m inside the western edge** of its cell, so the property
+straddles two: 44.5% of the title and **72.4% of the model domain fall in the cell to the
+west**, which the 20-year forcing never used. BARRA-C2's 0.04° cell edge at lon 148.720
+splits the farm too, leaving 26% of the domain outside the pixel we sampled.
+
+| | mm/yr |
+|---|---|
+| SILO east cell — used for the 20-year forcing | 536.9 |
+| SILO west cell | 607.7 |
+| weighted by where the model domain actually is | **588.2** |
+| BARRA-C2 cell, as published | 930.5 |
+
+**Gauges, and which ones are real.** Of the stations within 60 km, several nearby records
+are entirely interpolated: Oak Vale (7.7 km) and Jindabyne (10.7 km) are **0% observed**
+over 2006–2025 — the stations are closed and SILO is infilling them. Six stations are
+genuinely observing, and they are almost all to the east:
+
+| station | km | elevation | observed | mm/yr |
+|---|---|---|---|---|
+| Berridale (Bolton St) | 11.8 E | 895 m | 94.9% | 553.9 |
+| Dalgety (Hamilton St) | 12.7 E | 775 m | 97.5% | 534.8 |
+| **Jindabyne (Glochinbah)** | **13.4 W** | **990 m** | **96.6%** | **654.8** |
+| Dalgety (Severn Park) | 19.0 E | 895 m | 93.3% | 531.8 |
+| Cooma Airport AWS | 27.2 E | 930 m | 99.0% | 558.6 |
+| Cooma (Myalla) | 34.5 E | 1042 m | 94.5% | 608.7 |
+
+The single operating western gauge is **18% wetter than the nearest eastern one**, which
+supports the west-wet gradient with observations rather than interpolation. Across these
+six, rainfall rises about 40 mm/yr per 100 m of elevation, though with n = 6 and elevation
+confounded with longitude the fit is weak (r² = 0.58, p = 0.08) and should not be leaned
+on hard.
+
+**And the farm is higher than SILO thinks it is.** SILO reports 861 m for its cell. The
+four farm parts average 1175 m (Top farm), 1055 m (Upper forest), 995 m (Northerly
+woodland) and 951 m (Lower forest flats) — 224 m of internal relief, all of it above the
+cell elevation. Taken with the gradient above that implies a real within-farm rainfall
+range, and that every part of the farm is wetter than the forcing says.
+
+## Summer and winter rain are different processes
+
+![Seasonal rainfall intensity](docs/avonside_seasonal_intensity.png)
+
+Splitting the hourly record by season separates the two rainfall regimes cleanly:
+
+- On wet days, the wettest hour carries a median **39% of summer daily rain against 32%
+  in winter** (Mann-Whitney p ≈ 1e-12, n = 526/483 wet days).
+- **19.1% of summer rain falls at more than 10 mm/h, against 0.6% of winter rain** — a
+  32-fold difference.
+- The wettest winter hour in twenty years is **11.0 mm/h**; the wettest summer hour is
+  **51.8 mm/h**.
+
+So whatever runoff intensity can generate at this site, it is a **summer process
+exclusively**. That matters for the water-repellency question above, because summer is
+also when the soil is driest and eucalypt-litter repellency is strongest — the two
+mechanisms peak together rather than cancelling.
+
 ## Vegetation
 
 ![Tree mask at 3 m, canopy >= 5 m](docs/avonside_tree_mask_3m.png)
