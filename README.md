@@ -249,9 +249,11 @@ radar 40, **111.4 km** from the farm, archived **2002–2026 at a volume every 6
 with 14 tilts. These are ODIM HDF5 files holding reflectivity as numbers — not the binned
 colour images on the Bureau's website.
 
-**It is literally a gauge in the sky, and that is the catch.** The dish is 1,382 m above
-sea level and the beam is 1.9° wide, so at this range it is 3.7 km deep: the lowest scan
-samples roughly **400 m to 4,100 m above the farm**, centred 2.2 km up. It measures
+**It is literally a gauge in the sky, and that is the catch.** The dish is 1,382.7 m above
+sea level and the beam is 1.9° wide (confirmed from the files' own `/how/beamwH`), so at
+this range it is 3.7 km deep: the lowest scan samples roughly **60 m to 3,770 m above the
+farm**, centred **1,915 m** up. Note that figure is above Top farm's own 1,175 m, not above
+SILO's 861 m grid elevation, which sits below the entire property. It measures
 hydrometeors *aloft*. What it sees may evaporate before landing, or grow by collision
 below the beam. Shallow winter rain is under-seen; deep summer convection is seen well —
 which is convenient, because convection is the part that matters for runoff.
@@ -275,10 +277,111 @@ warm-season storm-day index (3,555 days ranked by daily 40 dBZ echo area, built 
 archive's own metadata) so that volumes can be pulled for chosen storms rather than
 wholesale — one day is 354 MB.
 
-Radar caveats that travel with every number above: generic Marshall–Palmer Z = 200·R^1.6,
-a 53 dBZ hail cap that is a convention not a measurement, no gauge calibration, no
-attenuation or beam-blockage correction, and a sample volume wider than the farm. Treat
-the depths as good to perhaps a factor of 1.5.
+**The radar has now been calibrated against gauges, and it reads low.** Extracting the
+pixel over six genuinely-observing stations for 54 archive days gives 126 radar–gauge
+station-days. Radar depth must be **multiplied by 1.91** to match the gauges (95% CI 1.51
+to 2.55, bootstrapped over the 26 days, which are the real unit of replication since up to
+six stations share a day). The factor is flat in event size — ×1.96 for events under 20 mm,
+×1.91 for events over — so it is not an artefact of how small events are weighted.
+
+Two honest limits on that number. First, **the scatter is the real constraint**: after
+applying the factor, a single station-day still carries a weighted absolute error of 47%.
+Second, **we could not explain the deficit**. Beam height looked like the culprit across
+stations, but with day-clustered errors and squared error in millimetres — so that large
+events drive the fit — the coefficient is +0.05 per km (p = 0.84) and adding it does not
+improve RMSE at all. Storm concentration fails the same way. The calibration days were also
+chosen as the wettest of each season, which biases any size-dependent term; days drawn
+across the whole rainfall distribution would give those terms a fair test.
+
+**Gauge interpolation beats calibrated radar for daily depth, and it is not close.**
+Leaving each of the six stations out in turn and interpolating it from the other five
+(9–23 km away) gives RMSE 9.7 mm against the calibrated radar's 26.0 mm on exactly the same
+station-days, with r = 0.90 against 0.58. Use radar for **event structure and timing**,
+which gauges cannot supply at all, and gauges for depth.
+
+Remaining caveats on every radar number here: generic Marshall–Palmer Z = 200·R^1.6, a
+53 dBZ hail cap that is a convention not a measurement, no attenuation or beam-blockage
+correction, and a sample volume wider than the farm. Note also that forcing Marshall–Palmer
+to close the gauge gap would need a coefficient of 71 against a standard range of 200–500,
+so the deficit is not plausibly a Z–R problem.
+
+### Use the module, not the recipe
+
+The hand recipe above is correct only for pre-upgrade volumes, and the archive is not
+uniform. `src/terrasim_avonside/rainfall.py` handles the variation, and
+`scripts/pull_rain.py` drives it.
+
+Two traps it exists to avoid:
+
+1. **The ODIM layout changed at the dual-polarisation upgrade.** Before it, Captains Flat
+   volumes held 14 tilts with `dataset1` the lowest at 0.5° and 500 m gates. From 2021
+   there are 13 tilts in *descending* order, so the 0.5° tilt is `dataset13`, gates are
+   250 m, cadence is 5 minutes, and clutter-filtered `DBZH_CLEAN` appears. **A reader
+   hard-coded to `dataset1` silently returns nothing for recent years** — that is exactly
+   what cost 8 days of the calibration pull above. The module finds the sweep by elevation
+   angle and reads gate spacing from the file.
+2. **Scan cadence varies across the archive** (5, 6 and 10 minutes). Accumulating with a
+   fixed 6-minute step understates a 10-minute day by 40%. The module uses each day's own
+   median step.
+
+It always pulls **both SILO and radar** for the same coordinates, because the two fail in
+different ways and the choice belongs to whoever is using them. Radar is sampled with a
+**±1 ray halo** and the per-ray envelope is carried into the output: at 110 km one ray is
+about 1.9 km, so on a convective day that envelope is the real spatial uncertainty. On
+5 January 2015 the farm total is 50.6 mm with an envelope of 29.8 to 59.8 mm.
+
+Geometry is computed once and every scan sampled in one vectorised gather, so a whole
+property costs little more than a single point — built for the 10,000 ha case where
+within-farm variation is real:
+
+```bash
+# one point, one storm day
+python scripts/pull_rain.py --lat -36.43347 --lon 148.71793 --days 20150105 --out topfarm
+
+# a property on a 250 m grid, across the upgrade boundary
+python scripts/pull_rain.py --bbox -36.45 148.70 -36.42 148.74 --grid 250 \
+    --days 20150105 20211125 --out farmgrid
+```
+
+`tests/test_rainfall.py` pins the behaviour, including that the lowest tilt on a 2021
+volume is *not* `dataset1`. The volume-reading tests skip unless `TERRASIM_ODIM_PRE` and
+`TERRASIM_ODIM_POST` point at directories of real `.h5` files.
+
+## The lesson, after five rainfall products
+
+> Summer rainfall is hardest to observe, hardest to record where and when, and hardest of
+> all to predict. In summer you get what you get, and catching a thunderstorm is worth
+> being ready for. Our tools will help us predict how to be ready, and by how much it will
+> help.
+
+Every instrument on this page agrees, and they fail in different ways, which is why the
+agreement is worth something:
+
+| | summer | winter |
+|---|---|---|
+| radar against gauges (r, daily depth) | 0.26 | 0.91 |
+| gauge network, leave-one-out (r) | 0.71 | 0.90 |
+| gauge network, leave-one-out (weighted error) | 50.7% | 37.5% |
+| rain falling above 10 mm/h | 19.1% | 0.6% |
+
+Winter rain is widespread and slow, so a gauge 15 km away is a good witness and the radar
+tracks it well. Summer rain arrives in cells smaller than a radar pixel and smaller than
+the gap between gauges, so **neither instrument can tell you how much fell on this farm**.
+The pixel test makes the point sharply: shifting the sampled radar pixel by two rays moves
+the 5 January 2015 farm total between 20.1 and 52.2 mm, because the cell's edge sits inside
+the property.
+
+That is not a failure to be fixed with a better product. It is a property of the rain, and
+it has a management consequence: the summer storm is the event that most affects this
+place and is least predictable, so the useful question is not *will it rain* but *is the
+farm ready when it does* — contours cut, cover maintained, soil able to take water quickly.
+
+**Where the missing information eventually turns up.** What no rain gauge recorded, the
+vegetation did. Sentinel-2 NDVI in the weeks after a storm carries the residual — the
+response is proportional to cumulative photosynthesis, so the plants integrate the rainfall
+the instruments missed. Coupling that to
+[DAESIM](https://github.com/NortonAlex/DAESIM), the Dynamic Agro-Ecosystem Simulator, is
+how this becomes a prediction of readiness rather than a post-hoc rainfall estimate.
 
 ## Speculative: do the trees seed their own rain?
 
@@ -318,34 +421,57 @@ Sources to start from:
 
 ![Effective precipitation at Avonside](docs/avonside_effective_rain.png)
 
-**This section has a direct consequence for the model and is the most important thing on
-this page for anyone running a soil-water step.** Both step functions in this repository —
-Yasar's subsurface bucket and our TOPMODEL — receive `rain` and put it straight into the
-root-zone store. At Avonside that input is wrong by about a factor of two under forest,
-and the error is not in the rainfall product.
+**This section has a direct consequence for the model.** Both step functions in this
+repository — Yasar's subsurface bucket and our TOPMODEL — receive `rain` and put it
+straight into the root-zone store, with no canopy ahead of it. That is an error of about
+10% of gross rainfall under forest here, and the error is not in the rainfall product.
 
-### Half the rain never reaches the soil
+It is also a cautionary tale about assumed parameters: an earlier version of this section
+put the figure at 50%, and the whole difference came from one number nobody had measured.
+
+### Rather less of the rain is intercepted than we first thought
 
 Putting a canopy-interception filter over the 20-year hourly series (bias-corrected to
-SILO's total, 536.9 mm/yr gross), with the canopy store filled before any throughfall and
-dried between events at a multiple of reference ET:
+SILO's total, 536.9 mm/yr gross), with the canopy store held per unit *canopy* area and
+the loss to the ground scaled by canopy cover:
 
 | | intercepted | into the soil | effective |
 |---|---|---|---|
-| forest, 3 mm canopy | 272.4 mm/yr | **264.5 mm/yr** | **49%** |
-| grass, 1 mm canopy | 191.1 mm/yr | 345.9 mm/yr | 64% |
+| forest, cover 0.55 | 50.7 mm/yr | **486 mm/yr** | **91%** |
+| grass | 56.1 mm/yr | 481 mm/yr | 90% |
 
-The cause is the shape of this site's rainfall rather than the canopy parameter. **73% of
-gross rain arrives in hours of under 3 mm**, and the mean wet hour is 0.81 mm. A canopy
-store of a few millimetres therefore does not shave a little off each storm — it absorbs
-whole events, and most of the water is in those events.
+**An earlier version of this section said 272 mm/yr and 49% effective. That was wrong,
+and the error was a single assumed parameter.** It used a 3 mm canopy store. Measured
+values for eucalypts are far smaller: Bulcock and Jewitt (2012,
+[HESS 16:3717](https://doi.org/10.5194/hess-16-3717-2012)) found a canopy storage capacity
+of 0.47 mm at LAI 2.7 for *Eucalyptus grandis* — the lowest of the three species they
+measured despite the highest LAI, which is the pendulous waxy-leaf effect. That is
+**0.174 mm per unit LAI**, about six times smaller than the value assumed here.
 
-**Treat the parameters as a range, not a measurement.** Across canopy storage of 1–4 mm
-and wet-canopy evaporation of 1–3× PET, interception runs from **28% to 61% of gross**.
-That span is wider than the disagreement between any two rainfall products discussed on
-this page. Two cheap field measurements would close most of it: throughfall gauges under
-canopy against one in the open, and a water-drop penetration or mini-disk infiltrometer
-test for repellency.
+The shape of the rainfall still matters — **73% of gross rain arrives in hours of under
+3 mm**, and the mean wet hour is 0.81 mm — but with a realistic store the canopy no longer
+absorbs whole events.
+
+**Interception here is 8–12% of gross rain**, against 14.9% measured for a closed eucalypt
+plantation and a global median of 21.8% across 2,430 observations. Running our model with
+that plantation's own parameters under Avonside rainfall gives 16.6% against their measured
+14.9% — the right magnitude, and higher as it should be, since our smaller events favour
+interception.
+
+**LAI is not the sensitive parameter; the store was.** Across the whole plausible LAI range
+— including a seasonal cycle thinning from 2.0 in winter to 1.0 in summer — interception
+moves only between 42 and 63 mm/yr. Once the store is a few tenths of a millimetre,
+interception is governed by *how many times the canopy gets wet*, not by how much it holds.
+
+Canopy cover from the 2018 LiDAR, by part: Top farm 0.50 (canopy 9.3 m), Upper forest 0.66
+(10.9 m), Northerly woodland 0.65 (7.4 m), Lower forest flats 0.58 (6.0 m). **The woodland
+is not more open than the forest — it is shorter.** Modelled interception spans only
+8.4–11.8% across the four parts, so differentiating them is not yet justified.
+
+Still missing: a **litter** store. The same study measured litter interception separately at
+8.5% of gross — roughly 46 mm/yr here — and neither step function has such a layer. The one
+field measurement that would settle this is throughfall gauges under canopy against one in
+the open.
 
 ### Interception and infiltration excess act on different events
 
@@ -371,8 +497,11 @@ cannot produce this runoff no matter how its soil physics is written.
 ### What this implies for the step functions
 
 1. **Add a canopy store ahead of the root-zone store**, with its own capacity and a
-   wet-canopy evaporation term. Neither step currently has one. Without it the model is
-   given roughly twice the water the forest floor actually receives.
+   wet-canopy evaporation term, and size the capacity from a measured per-LAI coefficient
+   (0.174 mm per unit LAI) rather than a round number. Neither step currently has one.
+   Without it the model is given about 10% more water than the forest floor receives, and
+   with a carelessly chosen capacity it can be wrong by a factor of four in either
+   direction.
 2. **Drive storm experiments at sub-hourly resolution.** Hourly forcing structurally
    cannot generate infiltration-excess runoff here. The radar archive supplies 6-minute
    real storms (see the radar section); design storms can be built from the IFD depths.
@@ -432,6 +561,9 @@ Two further caveats worth carrying:
 ```
 src/terrasim_avonside/step_topmodel.py   the TOPMODEL StepFunction, with inline tests
 scripts/pull_barra_hourly.py             the BARRA-C2 hourly pull
+scripts/pull_rain.py                     SILO + radar for any farm, both sources
+src/terrasim_avonside/rainfall.py        ODIM radar and SILO extraction
+tests/                                   unit tests
 data/barra/                              20 years of hourly rain (CC BY — see its README)
 docs/                                    figures
 ```
