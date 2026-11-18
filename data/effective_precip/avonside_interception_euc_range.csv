@@ -1,0 +1,4 @@
+case,S_canopy_mm,cover,interception_mm_yr,pct_gross,to_soil_mm_yr,pct_to_soil,interception_closed_pct
+low (0.33 mm),0.33,0.553,43.0,8.0,493.9,92.0,14.5
+mid (0.47 mm),0.47,0.553,49.3,9.2,487.6,90.8,16.6
+high (0.65 mm),0.65,0.553,56.0,10.4,480.9,89.6,18.9

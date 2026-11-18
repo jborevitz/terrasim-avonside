@@ -433,26 +433,37 @@ put the figure at 50%, and the whole difference came from one number nobody had 
 
 Putting a canopy-interception filter over the 20-year hourly series (bias-corrected to
 SILO's total, 536.9 mm/yr gross), with the canopy store held per unit *canopy* area and
-the loss to the ground scaled by canopy cover:
+the loss to the ground scaled by canopy cover 0.553.
 
-| | intercepted | into the soil | effective |
+**The canopy store is carried as a range, not a single number.** We use the measured
+eucalypt low and high, **0.33–0.65 mm per unit canopy area**:
+
+| canopy store | intercepted | into the soil | effective |
 |---|---|---|---|
-| forest, cover 0.55 | 50.7 mm/yr | **486 mm/yr** | **91%** |
+| forest, 0.33 mm (low) | 43.0 mm/yr | **494 mm/yr** | **92%** |
+| forest, 0.47 mm (mid) | 49.3 mm/yr | 488 mm/yr | 91% |
+| forest, 0.65 mm (high) | 56.0 mm/yr | **481 mm/yr** | **90%** |
 | grass | 56.1 mm/yr | 481 mm/yr | 90% |
+
+The whole measured range moves effective rainfall by 13 mm/yr — 2% of gross — so the
+choice within it is no longer load-bearing. `data/effective_precip/avonside_interception_euc_range.csv`.
 
 **An earlier version of this section said 272 mm/yr and 49% effective. That was wrong,
 and the error was a single assumed parameter.** It used a 3 mm canopy store. Measured
 values for eucalypts are far smaller: Bulcock and Jewitt (2012,
-[HESS 16:3717](https://doi.org/10.5194/hess-16-3717-2012)) found a canopy storage capacity
-of 0.47 mm at LAI 2.7 for *Eucalyptus grandis* — the lowest of the three species they
-measured despite the highest LAI, which is the pendulous waxy-leaf effect. That is
-**0.174 mm per unit LAI**, about six times smaller than the value assumed here.
+[HESS 16:3717](https://doi.org/10.5194/hess-16-3717-2012)) measured a canopy storage
+capacity of **0.33–0.65 mm, mean 0.47 mm at LAI 2.7**, for an *Eucalyptus grandis*
+plantation — the lowest of the three species they measured despite the highest LAI, which
+is the pendulous waxy-leaf effect. The mean is **0.174 mm per unit LAI**, about six times
+smaller than the value assumed here; but see the note below on why we no longer scale the
+store by LAI.
 
 The shape of the rainfall still matters — **73% of gross rain arrives in hours of under
 3 mm**, and the mean wet hour is 0.81 mm — but with a realistic store the canopy no longer
 absorbs whole events.
 
-**Interception here is 8–12% of gross rain**, against 14.9% measured for a closed eucalypt
+**Interception here is 8.0–10.4% of gross rain** across the measured store range (14.5–18.9%
+if the canopy were closed rather than 55% cover), against 14.9% measured for a closed eucalypt
 plantation and a global median of 21.8% across 2,430 observations. Running our model with
 that plantation's own parameters under Avonside rainfall gives 16.6% against their measured
 14.9% — the right magnitude, and higher as it should be, since our smaller events favour
@@ -467,6 +478,56 @@ Canopy cover from the 2018 LiDAR, by part: Top farm 0.50 (canopy 9.3 m), Upper f
 (10.9 m), Northerly woodland 0.65 (7.4 m), Lower forest flats 0.58 (6.0 m). **The woodland
 is not more open than the forest — it is shorter.** Modelled interception spans only
 8.4–11.8% across the four parts, so differentiating them is not yet justified.
+
+### The canopy store is borrowed, and it is measurable in an afternoon
+
+**What we use, and why.** 0.33–0.65 mm per unit canopy area, from a *Eucalyptus grandis*
+plantation in KwaZulu-Natal (Bulcock and Jewitt 2012,
+[HESS 16:3717](https://doi.org/10.5194/hess-16-3717-2012)) — a different species, a
+different climate and a closed plantation canopy, transferred to an open *E. viminalis* /
+*E. pauciflora* woodland. It is the best measured eucalypt anchor we have and it is
+explicitly a placeholder for a leaf-type value of our own.
+
+**Three things are known to be uncertain about it.**
+
+1. **The store depends on rainfall intensity, not just on the canopy.** Bulcock and Jewitt
+   fit storage as a power law in intensity with an exponent near −0.3: low-intensity drops
+   have little kinetic energy and settle, large drops dislodge water. Their storage changes
+   little above 1–2 mm/h for *E. grandis*. **73% of our rain falls in hours under 3 mm**, so
+   Avonside sits in the regime where storage is at the *high* end of its range — the 0.65 mm
+   case is likely the better central estimate for us, not the 0.47 mm mean.
+2. **Leaf width is probably the wrong axis to split species on.** The parameter that
+   governs shedding is the **drop retention angle** — water runs off once leaf inclination
+   exceeds it — and it does not track the static contact angle (Lenz, Bauer and Ruxton 2021,
+   *J. Exp. Bot.*, [10.1093/jxb/erab479](https://doi.org/10.1093/jxb/erab479)). Narrow
+   elongated leaves and drip tips shed *more* readily. Eucalypt leaves hang pendulously,
+   which explains the low plantation storage better than leaf area or width does. Prediction
+   worth testing: ribbon gum (~1 cm leaf) and snow gum (~3 cm) differ threefold in width but
+   both hang, so they should store *similarly*, and a width-based split would be wasted work.
+3. **The measurement method itself moves the number.** Spraying and submergence give
+   systematically different maximum storage, hydrophobic leaves hold more water, and
+   trichomes and serrated margins raise spray-based capacity (Cao, Li, Seibert and
+   Gerlein-Safdi 2026, *Ecohydrology*,
+   [10.1002/eco.70162](https://doi.org/10.1002/eco.70162)). Note the unresolved tension with
+   the point above: that synthesis finds serrated margins *raise* holding capacity while the
+   retention-angle review finds elongation and drip tips *lower* it.
+
+**A student project that would settle it, with a balance and a protractor.** Two
+measurements, both on fresh ribbon gum and snow gum material:
+
+- **Maximum storage per unit leaf area.** Weigh leaf samples dry, wet them, re-weigh, divide
+  by one-sided leaf area (scan or grid-count). Do it **both ways — spray to runoff and full
+  submergence** — and report both numbers, because they disagree and the disagreement is the
+  honest error bar. Repeat on branch sections if time allows: twigs and bark hold water too,
+  and the canopy store is not only leaves.
+- **Drop retention angle.** Put a wetted leaf on a tilting stage, raise it until the drop
+  runs, record the angle. Compare that angle against the leaves' *natural* inclination in the
+  canopy — if inclination routinely exceeds retention angle, the canopy sheds and the store
+  is small regardless of leaf area.
+
+Either number replaces a borrowed constant with a measured one. The second is the one the
+literature says actually governs the physics, and nobody appears to have measured it for
+these two species.
 
 Still missing: a **litter** store. The same study measured litter interception separately at
 8.5% of gross — roughly 46 mm/yr here — and neither step function has such a layer. The one
@@ -497,8 +558,10 @@ cannot produce this runoff no matter how its soil physics is written.
 ### What this implies for the step functions
 
 1. **Add a canopy store ahead of the root-zone store**, with its own capacity and a
-   wet-canopy evaporation term, and size the capacity from a measured per-LAI coefficient
-   (0.174 mm per unit LAI) rather than a round number. Neither step currently has one.
+   wet-canopy evaporation term, and size the capacity from the measured eucalypt range
+   (**0.33–0.65 mm per unit canopy area**, run low and high) rather than a round number or
+   an LAI multiplier — storage here is governed by intensity and leaf posture, not by leaf
+   area, and across the plausible LAI range it barely moves. Neither step currently has one.
    Without it the model is given about 10% more water than the forest floor receives, and
    with a carelessly chosen capacity it can be wrong by a factor of four in either
    direction.
